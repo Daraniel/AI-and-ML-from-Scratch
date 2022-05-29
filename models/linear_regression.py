@@ -52,6 +52,9 @@ class LinearRegressionAnalytic(BaseModel, Regression):
          1 being the number of target dimensions)
         :return:
         """
+        if features.shape[0] != targets.shape[0]:
+            raise InvalidArgumentException('Features and targets must have similar first shape')
+
         self.feature_normalizer.calculate(features)
         self.target_normalizer.calculate(targets)
 
@@ -60,7 +63,6 @@ class LinearRegressionAnalytic(BaseModel, Regression):
 
         average_of_features = np.mean(normalized_features, axis=0)
         average_of_targets = np.mean(normalized_targets, axis=0)
-
 
         self.weights = self._calculate_weights(normalized_features, normalized_targets)
         self.bias = self._calculate_bias(average_of_features, average_of_targets, self.weights)
@@ -107,6 +109,7 @@ class LinearRegressionGradiantDecent(BaseModel, Regression):
         :param learning_rate: learning rate
         :return: numpy array of shape (d) (with d being the number of feature dimensions)
         """
+        # ix = np.random.choice(features.shape[0], size=int(features.shape[0]/10), replace=False) # Sample indices to be used as minibatch
         gradiant = learning_rate * -features.T.dot(targets.flatten() - features.dot(weights))
         gradiant[gradiant < 0.0000000001] = 0.0000000001  # prevent vanishing values
         gradiant[gradiant > 1000000000] = 1000000000  # prevent exploding values
@@ -145,6 +148,8 @@ class LinearRegressionGradiantDecent(BaseModel, Regression):
             raise InvalidArgumentException('Learning rate must be positive number')
         if not isinstance(iterations, int) or iterations < 1:
             raise InvalidArgumentException('Iterations must be a positive integer')
+        if features.shape[0] != targets.shape[0]:
+            raise InvalidArgumentException('Features and targets must have similar first shape')
 
         self.feature_normalizer.calculate(features)
         self.target_normalizer.calculate(targets)
@@ -159,7 +164,6 @@ class LinearRegressionGradiantDecent(BaseModel, Regression):
         self.bias = 0
 
         for i in range(iterations):
-            # self.weights = self._step(features, targets, self.weights, learning_rate)
             self.weights = self._step(normalized_features, normalized_targets, self.weights, learning_rate)
 
         self.bias = self._calculate_bias(average_of_features, average_of_targets, self.weights)
@@ -175,5 +179,4 @@ class LinearRegressionGradiantDecent(BaseModel, Regression):
         if self.weights is None or self.bias is None:
             raise ModelNotTrainedException()
         output = np.sum(features * self.weights, axis=1) + self.bias
-        # return output
         return self.target_normalizer.denormalize(output)

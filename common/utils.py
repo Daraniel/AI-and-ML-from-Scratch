@@ -24,3 +24,24 @@ class AverageNormalizer2D:
 
         return x * self.std + self.average
 
+
+class Utils:
+    @staticmethod
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
+
+
+class DistanceMetrics:
+    @staticmethod
+    def euclidean_distance(first: np.ndarray, second: np.ndarray) -> np.ndarray:
+        sum_squares_first = np.reshape(np.sum(first * first, axis=1), (first.shape[0], 1))
+        sum_squares_second = np.reshape(np.sum(second * second, axis=1), (1, second.shape[0]))
+        result = -2 * first @ second.T + sum_squares_second + sum_squares_first
+
+        return np.sqrt(result)
+
+
+class EvaluationMetrics:
+    @staticmethod
+    def rmse(x, y):
+        return np.sqrt(np.mean((x - y) ** 2))
