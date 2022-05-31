@@ -21,13 +21,10 @@ class KMeansClassifier(BaseModel, Classifier):
         :param points: points to find their center
         :param k: number of centers (clusters)
         """
-        central_points = []
-
-        while len(central_points) < k:
-            central_points = points[random.sample(range(0, len(points)), k - len(central_points))]
-            central_points = np.unique(central_points, axis=0)
-
-        self.central_points = central_points
+        self.central_points = []
+        while len(self.central_points) < k:
+            self.central_points = points[random.sample(range(0, len(points)), k - len(self.central_points))]
+            self. central_points = np.unique(self.central_points, axis=0)
 
     def _get_new_central_points(self):
         """

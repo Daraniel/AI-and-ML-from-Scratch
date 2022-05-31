@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 
 from common.base_model import BaseModel, Regression
@@ -83,11 +85,12 @@ class LinearRegressionAnalytic(BaseModel, Regression):
 
 
 class LinearRegressionGradiantDecent(BaseModel, Regression):
-    def __init__(self):
+    def __init__(self, batch_divider: int = 50):
         self.weights = None
         self.bias = None
         self.feature_normalizer = AverageNormalizer2D()
         self.target_normalizer = AverageNormalizer2D()
+        self.batch_divider = batch_divider
 
     @staticmethod
     def _normalize(array: np.ndarray) -> np.ndarray:
@@ -95,7 +98,8 @@ class LinearRegressionGradiantDecent(BaseModel, Regression):
         return array
 
     @staticmethod
-    def _step(features: np.ndarray, targets: np.ndarray, weights: np.ndarray, learning_rate: float) -> np.ndarray:
+    def _step(features: np.ndarray, targets: np.ndarray, weights: np.ndarray, learning_rate: float,
+              batch_divider: int) -> np.ndarray:
         """
         calculates the weights in the next step using gradiant decent method using the following formula:
         W_new = W_old - learning_rate * -X^T . (Y - X . W_old)
@@ -107,13 +111,19 @@ class LinearRegressionGradiantDecent(BaseModel, Regression):
          1 being the number of target dimensions)
         :param weights: numpy array of shape (d) (with d being the number of feature dimensions)
         :param learning_rate: learning rate
+        :param batch_divider: number of parts to divide the training dateset
         :return: numpy array of shape (d) (with d being the number of feature dimensions)
         """
-        # ix = np.random.choice(features.shape[0], size=int(features.shape[0]/10), replace=False) # Sample indices to be used as minibatch
-        gradiant = learning_rate * -features.T.dot(targets.flatten() - features.dot(weights))
-        gradiant[gradiant < 0.0000000001] = 0.0000000001  # prevent vanishing values
-        gradiant[gradiant > 1000000000] = 1000000000  # prevent exploding values
-        return weights - gradiant
+        indices = list(range(features.shape[0]))
+        for i in range(batch_divider):
+            ix = random.sample(indices, min(features.shape[0] // batch_divider, len(indices)))
+            for x in ix:
+                indices.remove(x)
+            gradiant = learning_rate * -features[ix].T.dot(targets[ix].flatten() - features[ix].dot(weights))
+            gradiant[gradiant < 0.0000000001] = 0.0000000001  # prevent vanishing values
+            gradiant[gradiant > 1000000000] = 1000000000  # prevent exploding values
+            weights = weights - gradiant
+        return weights
 
     @staticmethod
     def _calculate_bias(features: np.ndarray, targets: np.ndarray, weights: np.ndarray) -> float:
@@ -128,8 +138,7 @@ class LinearRegressionGradiantDecent(BaseModel, Regression):
         :param weights: numpy array of shape (d) (with d being the number of feature dimensions)
         :return: float
         """
-        # x_bar = np.mean(features, axis=0)
-        # y_bar = np.mean(targets, axis=0)
+
         return float(targets - np.sum(features * weights))
 
     def learn(self, features: np.array, targets: np.array, learning_rate: float = 1, iterations: int = 10):
@@ -164,7 +173,7 @@ class LinearRegressionGradiantDecent(BaseModel, Regression):
         self.bias = 0
 
         for i in range(iterations):
-            self.weights = self._step(normalized_features, normalized_targets, self.weights, learning_rate)
+            self.weights = self._step(normalized_features, normalized_targets, self.weights, learning_rate, self.batch_divider)
 
         self.bias = self._calculate_bias(average_of_features, average_of_targets, self.weights)
 

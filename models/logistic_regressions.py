@@ -8,11 +8,12 @@ from common.utils import AverageNormalizer2D, Utils
 
 
 class LogisticRegression(BaseModel, Classifier):
-    def __init__(self):
+    def __init__(self, batch_divider: int = 50):
         self.weights = None
         self.bias = None
         self.feature_normalizer = AverageNormalizer2D()
         self.target_normalizer = AverageNormalizer2D()
+        self.batch_divider = batch_divider
 
     @staticmethod
     def _normalize(array: np.ndarray) -> np.ndarray:
@@ -20,7 +21,8 @@ class LogisticRegression(BaseModel, Classifier):
         return array
 
     @staticmethod
-    def _step(features: np.ndarray, targets: np.ndarray, weights: np.ndarray, learning_rate: float) -> np.ndarray:
+    def _step(features: np.ndarray, targets: np.ndarray, weights: np.ndarray, learning_rate: float, batch_divider: int) \
+            -> np.ndarray:
         """
         calculates the weights in the next step using sigmoid gradiant decent method using the following formula:
         W_new = W_old - learning_rate * -X^T . (Y - sigmoid(X . W_old))
@@ -32,21 +34,20 @@ class LogisticRegression(BaseModel, Classifier):
          1 being the number of target dimensions)
         :param weights: numpy array of shape (d) (with d being the number of feature dimensions)
         :param learning_rate: learning rate
+        :param batch_divider: number of parts to divide the training dateset
         :return: numpy array of shape (d) (with d being the number of feature dimensions)
         """
-        batch_divider = 50
         indices = list(range(features.shape[0]))
         for i in range(batch_divider):
-            ix = random.sample(indices, min(features.shape[0]//batch_divider, len(indices)))
+            ix = random.sample(indices, min(features.shape[0] // batch_divider, len(indices)))
             for x in ix:
                 indices.remove(x)
-            gradiant = learning_rate * - features[ix].T.dot(targets[ix].flatten() - Utils.sigmoid(features[ix].dot(weights)))
-            # gradiant[gradiant < 0.00000000001] = 0.00000000001  # prevent vanishing values
-            # gradiant[gradiant > 10000000000] = 10000000000  # prevent exploding values
+            gradiant = learning_rate * - features[ix].T.dot(
+                targets[ix].flatten() - Utils.sigmoid(features[ix].dot(weights)))
+            gradiant[gradiant < 0.00000000001] = 0.00000000001  # prevent vanishing values
+            gradiant[gradiant > 10000000000] = 10000000000  # prevent exploding values
             weights = weights - gradiant
         return weights
-
-        # return weights - learning_rate * (np.dot(features.T, (Utils.sigmoid(np.dot(features, weights))) - targets))
 
     @staticmethod
     def _calculate_bias(features: np.ndarray, targets: np.ndarray, weights: np.ndarray) -> float:
@@ -82,27 +83,11 @@ class LogisticRegression(BaseModel, Classifier):
         if features.shape[0] != targets.shape[0]:
             raise InvalidArgumentException('Features and targets must have similar first shape')
 
-        # self.feature_normalizer.calculate(features)
-        # self.target_normalizer.calculate(targets)
-
-        # normalized_features = self.feature_normalizer.normalize(features)
-        # normalized_targets = self.target_normalizer.normalize(targets)
-
-        # average_of_features = np.mean(features, axis=0)
-        # average_of_targets = np.mean(targets, axis=0)
-
-        # average_of_features = np.mean(normalized_features, axis=0)
-        # average_of_targets = np.mean(normalized_targets, axis=0)
-
-        # self.weights = np.random.randn(features.shape[1])
         self.weights = np.ones(features.shape[1])
         self.bias = 0
 
         for i in range(iterations):
-            # self.weights = self._step(normalized_features, normalized_targets, self.weights, learning_rate)
-            self.weights = self._step(features, targets, self.weights, learning_rate)
-
-        # self.bias = self._calculate_bias(average_of_features, average_of_targets, self.weights)
+            self.weights = self._step(features, targets, self.weights, learning_rate, self.batch_divider)
 
     def infer(self, features: np.array) -> np.array:
         """
@@ -111,9 +96,7 @@ class LogisticRegression(BaseModel, Classifier):
         :return: inferred values
         :raises: ModelNotTrainedException
         """
-        # features = self.feature_normalizer.normalize(features)
         if self.weights is None or self.bias is None:
             raise ModelNotTrainedException()
         output = np.sum(features * self.weights, axis=1) + self.bias
         return np.round(Utils.sigmoid(output))
-        # return self.target_normalizer.denormalize(output)

@@ -28,7 +28,44 @@ class NaiveBayesClassifier(Classifier):
         """
         return re.findall(r'\b\w\w+\b', string)
 
-    def learn(self, doc_groups: Dict[str, Dict[str, Union[int, Dict[str, int]]]], vocabulary: Dict[str, int]):
+    @staticmethod
+    def _tokenize_and_parse_doc(doc: str, content: Dict[str, Union[int, Dict[str, int]]], vocabulary: Dict[str, int]):
+        """
+        tokenizes and parses a document string and updates the content and the vocabulary with it
+        :param doc: document to check
+        :param content: dictionary containing the content
+        :param vocabulary: dictionary of vocabulary
+        """
+        terms = NaiveBayesClassifier._tokenize(doc)
+        content['term_count'] += len(terms)
+        for term in terms:
+            if term in content['terms']:
+                vocabulary[term] += 1
+                content['terms'][term] += 1
+            else:
+                content['terms'][term] = 1
+                if term in vocabulary:
+                    vocabulary[term] += 1
+                else:
+                    vocabulary[term] = 1
+
+    def learn(self, doc_groups: Dict[str, List[str]]):
+        """
+        trains the Naive Bayes model on the input doc_groups
+        :param doc_groups: dictionary that has the document groups as the key and list of the content of documents of
+        that group as value
+        """
+        parsed_doc_groups = {}
+        vocabulary = {}
+
+        for doc_group, docs in doc_groups.items():
+            parsed_doc_groups[doc_group] = {'document_count': len(docs), 'term_count': 0, 'terms': dict()}
+            for doc in docs:
+                self._tokenize_and_parse_doc(doc, parsed_doc_groups[doc_group], vocabulary)
+
+        return self._learn(parsed_doc_groups, vocabulary)
+
+    def _learn(self, doc_groups: Dict[str, Dict[str, Union[int, Dict[str, int]]]], vocabulary: Dict[str, int]):
         """
         trains the Naive Bayes model on the input doc_groups and with given vocabulary
         :param doc_groups: doc_groups to train the model on
@@ -101,19 +138,8 @@ class NaiveBayesClassifierExtended(NaiveBayesClassifier):
             doc_groups[doc_group] = {'document_count': len(docs), 'term_count': 0, 'terms': dict()}
 
             for doc_path in docs:
-                terms = self._tokenize(self._read_file(os.path.join(docs_path, doc_path)))
-                doc_groups[doc_group]['term_count'] += len(terms)
-
-                for term in terms:
-                    if term in doc_groups[doc_group]['terms']:
-                        vocabulary[term] += 1
-                        doc_groups[doc_group]['terms'][term] += 1
-                    else:
-                        doc_groups[doc_group]['terms'][term] = 1
-                        if term in vocabulary:
-                            vocabulary[term] += 1
-                        else:
-                            vocabulary[term] = 1
+                doc = self._read_file(os.path.join(docs_path, doc_path))
+                self._tokenize_and_parse_doc(doc, doc_groups[doc_group], vocabulary)
         return doc_groups, vocabulary
 
     def train(self, path: str):
@@ -121,7 +147,7 @@ class NaiveBayesClassifierExtended(NaiveBayesClassifier):
         trains the Naive Bayes model on the documents in the given path
         :param path: path of the documents. it must contain documents in folders that determine their classes
         """
-        self.learn(*self._parse_path(path))
+        self._learn(*self._parse_path(path))
 
     def test(self, path: str) -> Tuple[List[int], List[int]]:
         """
