@@ -115,5 +115,5 @@ class LogisticRegression(BaseModel, Classifier):
         if self.weights is None or self.bias is None:
             raise ModelNotTrainedException()
         output = np.sum(features * self.weights, axis=1) + self.bias
-        return np.round(output)
+        return np.round(Utils.sigmoid(output))
         # return self.target_normalizer.denormalize(output)
