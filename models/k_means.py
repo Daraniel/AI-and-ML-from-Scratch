@@ -3,11 +3,11 @@ import random
 import numpy as np
 
 from common.base_model import BaseModel, Classifier
-from common.utils import DistanceMetrics
+from common.utils import EvaluationMetrics
 
 
 class KMeansClassifier(BaseModel, Classifier):
-    def __init__(self, distance_metric=DistanceMetrics.euclidean_distance):
+    def __init__(self, distance_metric=EvaluationMetrics.euclidean_distance):
         """
         :param distance_metric: distance metric used by the k-means clustering
         """

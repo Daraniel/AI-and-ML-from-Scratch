@@ -4,7 +4,7 @@ import numpy as np
 
 from common.base_model import BaseModel, Classifier
 from common.exceptions import InvalidArgumentException, ModelNotTrainedException
-from common.utils import AverageNormalizer2D, Utils
+from common.utils import AverageNormalizer2D, ActivationFunctions
 
 
 class LogisticRegression(BaseModel, Classifier):
@@ -43,7 +43,7 @@ class LogisticRegression(BaseModel, Classifier):
             for x in ix:
                 indices.remove(x)
             gradiant = learning_rate * - features[ix].T.dot(
-                targets[ix].flatten() - Utils.sigmoid(features[ix].dot(weights)))
+                targets[ix].flatten() - ActivationFunctions.sigmoid(features[ix].dot(weights)))
             gradiant[gradiant < 0.00000000001] = 0.00000000001  # prevent vanishing values
             gradiant[gradiant > 10000000000] = 10000000000  # prevent exploding values
             weights = weights - gradiant
@@ -99,4 +99,4 @@ class LogisticRegression(BaseModel, Classifier):
         if self.weights is None or self.bias is None:
             raise ModelNotTrainedException()
         output = np.sum(features * self.weights, axis=1) + self.bias
-        return np.round(Utils.sigmoid(output))
+        return np.round(ActivationFunctions.sigmoid(output))
