@@ -26,7 +26,14 @@ class LinearRegressionAnalytic(BaseModel, Regression):
          1 being the number of target dimensions)
         :return: numpy array of shape (d) (with d being the number of feature dimensions) that maps features to targets
         """
-        return np.linalg.inv(features.T.dot(features)).dot(features.T).dot(targets).flatten()
+        mid_result = features.T.dot(features)
+
+        try:
+            mid_result = np.linalg.inv(mid_result)
+        except np.linalg.LinAlgError:
+            print("Warning, normal matrix inverse failed, using  pseudo-inverse instead.")
+            mid_result = np.linalg.pinv(mid_result)
+        return mid_result.dot(features.T).dot(targets).flatten()
 
     @staticmethod
     def _calculate_bias(features: np.ndarray, targets: np.ndarray, weights: np.ndarray) -> float:

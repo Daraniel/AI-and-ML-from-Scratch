@@ -140,7 +140,7 @@ class DecisionTree(Classifier, BaseModel):
 
     def _get_split_attribute(self, features, targets, attributes):
         """
-        calculates the bes attribute for the given features with maximum the impurity reduction
+        calculates the best attribute for the given features with maximum the impurity reduction
         :param features: input, number_of_records * number_of_records
         :param targets: concept vector, number_of_records * 1
         :param attributes: mapping of attributes indexes to their names
@@ -155,10 +155,10 @@ class DecisionTree(Classifier, BaseModel):
         if self.verbose:
             print(f"Impurity reduction ordered by attributes is as follows: {impurity_reduction}")
             print(
-                f"Maximum impurity reduction of {impurity_reduction(index_of_maximum_impurity_reduction)} "
+                f"Maximum impurity reduction of {impurity_reduction[index_of_maximum_impurity_reduction]} "
                 f"for the attribute {index_of_maximum_impurity_reduction}")
 
-        return index_of_maximum_impurity_reduction, {impurity_reduction(index_of_maximum_impurity_reduction)}
+        return index_of_maximum_impurity_reduction, {impurity_reduction[index_of_maximum_impurity_reduction]}
 
     def _get_impurity_reduction(self, features: np.ndarray, attribute_to_reduce: np.ndarray, targets: np.ndarray):
         """
@@ -219,4 +219,4 @@ class DecisionTree(Classifier, BaseModel):
         unique_targets = np.unique(targets)
         if mask is not None:
             targets = targets[mask]
-        return (1 / occurrences) * np.ndarray(np.sum(targets == unique_element) for unique_element in unique_targets)
+        return (1 / occurrences) * np.ndarray([np.sum(targets == unique_element) for unique_element in unique_targets])

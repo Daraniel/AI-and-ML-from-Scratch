@@ -2,7 +2,7 @@ from numbers import Number
 
 import numpy as np
 
-from common.base_model import BaseModel, Classifier, Regression
+from common.base_model import BaseModel, Classifier
 from common.exceptions import ModelNotTrainedException, InvalidArgumentException
 
 
@@ -56,7 +56,7 @@ class SVM(BaseModel, Classifier):
 
     def infer(self, features: np.array) -> np.array:
         """
-        predicts the labels of the input
+        predicts the labels of a single input
         :param features: input features
         :return: predicted label of the input
         """
@@ -67,6 +67,14 @@ class SVM(BaseModel, Classifier):
         for i, feature in enumerate(features):
             result += self.weights[i] * feature
         return result
+
+    def infer_inputs(self, inputs_features: np.array) -> np.array:
+        """
+        predicts the labels of inputs
+        :param inputs_features: features of inputs
+        :return: predicted label of inputs
+        """
+        return np.array([self.infer(features) for features in inputs_features])
 
 # class SVR(BaseModel, Regression):
 #     def __init__(self, epsilon=0.5):

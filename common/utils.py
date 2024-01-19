@@ -36,6 +36,12 @@ class ActivationFunctions:
     def relu(x):
         return np.maximum(x, 0)
 
+    @staticmethod
+    def softmax(x, axis=None):
+        x_max = np.amax(x, axis=axis, keepdims=True)
+        exp_x_shifted = np.exp(x - x_max)
+        return exp_x_shifted / np.sum(exp_x_shifted, axis=axis, keepdims=True)
+
 
 class ActivationFunctionsForNN:
     class BaseActivationFunctionForNN(abc.ABC):
@@ -67,6 +73,16 @@ class ActivationFunctionsForNN:
         def backward(self, x):
             return x * self.result * (1 - self.result)
 
+    class Softmax(BaseActivationFunctionForNN):
+        def __init__(self, axis=None):
+            self.axis = axis
+
+        def forward(self, x):
+            return ActivationFunctions.softmax(x, self.axis)
+
+        def backward(self, x):
+            return x
+
 
 class EvaluationMetrics:
     @staticmethod
@@ -75,7 +91,7 @@ class EvaluationMetrics:
 
     @staticmethod
     def hinge_lost(x, y):
-        return max(0, 1 - x * y)
+        return np.maximum(0, 1 - x * y)
 
     @staticmethod
     def cross_entropy_loss(yhat, y):

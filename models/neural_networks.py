@@ -42,6 +42,10 @@ class NeuralNetworkModel(BaseModel):
         """
         if not isinstance(layer, BaseLayer):
             raise InvalidArgumentException("Layer must inherit from BaseLayer")
+        if len(self.layers) == 0 and isinstance(layer, LinearLayer):
+            print("When using LinearLayer as the first layer,"
+                  " a flattening operation must be applied to the data due to internal implementation details")
+            self.layers.append(FlattenLayer())
         self.layers.append(layer)
 
     def _forward(self, x):
@@ -76,13 +80,14 @@ class NeuralNetworkModel(BaseModel):
                 gradients_bias = gradients_biases[i]
                 layer.gradient_decent(gradient, gradients_bias, number_of_records)
 
-    def learn(self, x: np.array, y: np.array, epochs=100, batch_size=10):
+    def learn(self, x: np.array, y: np.array, epochs=100, batch_size=10, verbose=True):
         """
         train the model with the given input and labels
         :param x: input features
         :param y: labels
         :param epochs: number of epochs to train the model
         :param batch_size: batch size, if 1, the model will use stochastic gradient descent
+        :param verbose: whether to print progress during training
         :return: list of costs of each epoch
         """
         if not isinstance(epochs, int) or epochs <= 0:
@@ -94,14 +99,15 @@ class NeuralNetworkModel(BaseModel):
             costs = []
             m = len(x)
             for epoch in range(epochs):
-                for i in tqdm(np.random.permutation(m)):
+                for i in tqdm(np.random.permutation(m), disable=not verbose):
                     weight_sums, activations = self._forward(np.atleast_3d(x[i]))
                     gradients, gradients_bias = self._back_propagate(weight_sums, activations, y[i])
                     self._gradient_decent(gradients, gradients_bias, 1)
 
                 self.is_trained = True
                 cost = self.calculate_cost(x, y)
-                print(f'Cost at epoch {epoch} is {cost}')
+                if verbose:
+                    print(f'Cost at epoch {epoch} is {cost}')
                 costs.append(cost)
 
         else:  # use normal gradient descent
@@ -109,7 +115,7 @@ class NeuralNetworkModel(BaseModel):
             m = len(x)
             for epoch in range(epochs):
                 batches = self._get_batch(m, batch_size)
-                for batch in tqdm(batches, total=m // batch_size + 1):
+                for batch in tqdm(batches, total=m // batch_size + 1, disable=not verbose):
                     first_gradient, first_gradient_bias = 0, 0
                     for element in batch:
                         weight_sums, activations = self._forward(np.atleast_3d(x[element]))
@@ -128,7 +134,8 @@ class NeuralNetworkModel(BaseModel):
 
                 self.is_trained = True
                 cost = self.calculate_cost(x, y)
-                print(f'Cost at epoch {epoch} is {cost}')
+                if verbose:
+                    print(f'Cost at epoch {epoch} is {cost}')
                 costs.append(cost)
 
         return np.array(costs)
@@ -167,7 +174,7 @@ class NeuralNetworkModel(BaseModel):
 
     def infer(self, x: np.array) -> np.array:
         """
-        predicts the labels of the input
+        predicts the labels of a single input
         :param x: input features
         :return: label of input
         """
@@ -178,6 +185,14 @@ class NeuralNetworkModel(BaseModel):
         weight_sums, activations = self._forward(x)
         yhat = activations[len(self.layers)]
         return yhat
+
+    def infer_inputs(self, inputs_features: np.array) -> np.array:
+        """
+        predicts the labels of inputs
+        :param inputs_features: features of inputs
+        :return: predicted label of inputs
+        """
+        return np.array([self.infer(features) for features in inputs_features])
 
     def save_weights(self, file_name):
         """

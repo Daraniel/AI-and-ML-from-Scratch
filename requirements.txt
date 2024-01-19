@@ -1,0 +1,4 @@
+tqdm~=4.64.0
+numpy~=1.22.3
+matplotlib~=3.4.3
+scikit-learn~=1.0.2 # used for gradding in the sample notebooks
