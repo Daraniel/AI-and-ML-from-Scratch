@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from common.exceptions import ModelNotTrainedException, InvalidArgumentException
+from common.exceptions import (InvalidArgumentException,
+                               ModelNotTrainedException)
 from models.support_vector import SVM
 
 

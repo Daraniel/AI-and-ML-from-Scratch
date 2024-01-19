@@ -14,7 +14,6 @@ class BaseModel(abc.ABC):
          1 being the number of target dimensions)
         :return:
         """
-        pass
 
     @abc.abstractmethod
     def infer(self, features: np.array) -> np.array:
@@ -24,7 +23,6 @@ class BaseModel(abc.ABC):
         :return: inferred value
         :raises: ModelNotTrainedException
         """
-        pass
 
 
 class Classifier:

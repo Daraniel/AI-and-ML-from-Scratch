@@ -29,17 +29,25 @@ class TestDecisionTree:
         targets = np.array([0, 1, 0, 1, 2, 1])
         expected_result = 1
         expected_is_pure = False
-        actual_result, actual_is_pure = DecisionTree._get_the_most_common_target_class(targets)
+        actual_result, actual_is_pure = DecisionTree._get_the_most_common_target_class(
+            targets
+        )
         assert actual_result == expected_result
         assert actual_is_pure == expected_is_pure
 
     def test_get_split_attribute(self):
         features = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         targets = np.array([0, 1, 0])
-        attributes = {0: np.array([1, 2, 3]), 1: np.array([4, 5, 6]), 2: np.array([7, 8, 9])}
+        attributes = {
+            0: np.array([1, 2, 3]),
+            1: np.array([4, 5, 6]),
+            2: np.array([7, 8, 9]),
+        }
         expected_result = 1
         expected_impurity_reduction = {1.0566416671474375}
         decision_tree = DecisionTree(verbose=True)
-        actual_result, actual_impurity_reduction = decision_tree._get_split_attribute(features, targets, attributes)
+        actual_result, actual_impurity_reduction = decision_tree._get_split_attribute(
+            features, targets, attributes
+        )
         assert actual_result == expected_result
         assert actual_impurity_reduction == expected_impurity_reduction

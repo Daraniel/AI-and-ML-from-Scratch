@@ -3,7 +3,8 @@ from numbers import Number
 import numpy as np
 
 from common.base_model import BaseModel, Classifier
-from common.exceptions import ModelNotTrainedException, InvalidArgumentException
+from common.exceptions import (InvalidArgumentException,
+                               ModelNotTrainedException)
 
 
 class SVM(BaseModel, Classifier):
@@ -14,12 +15,16 @@ class SVM(BaseModel, Classifier):
         """
         self.weights = None
         if not isinstance(lambda_regularization, Number):
-            raise InvalidArgumentException('lambda_regularization must be a number')
+            raise InvalidArgumentException("lambda_regularization must be a number")
         if lambda_regularization <= 0:
-            raise InvalidArgumentException("lambda_regularization must be a positive number")
+            raise InvalidArgumentException(
+                "lambda_regularization must be a positive number"
+            )
         self.lambda_regularization = lambda_regularization
 
-    def learn(self, list_of_features: np.array, list_of_targets: np.array, epochs: int = 100):
+    def learn(
+        self, list_of_features: np.array, list_of_targets: np.array, epochs: int = 100
+    ):
         """
         trains the model using a list of input features to predict the list of targets
         :param list_of_features: list of input features
@@ -27,9 +32,11 @@ class SVM(BaseModel, Classifier):
         :param epochs: number of epochs to train the model
         """
         if len(list_of_features) != len(list_of_targets):
-            raise InvalidArgumentException("length of features and targets must be same")
+            raise InvalidArgumentException(
+                "length of features and targets must be same"
+            )
         if not isinstance(epochs, int):
-            raise InvalidArgumentException('Number of epochs must be an integer')
+            raise InvalidArgumentException("Number of epochs must be an integer")
         if epochs <= 0:
             raise InvalidArgumentException("Number of epochs must be a positive number")
 
@@ -48,11 +55,15 @@ class SVM(BaseModel, Classifier):
         if target * self.infer(features) < 1:
             for i, feature in enumerate(features):
                 self.weights[i] = self.weights[i] + alpha * (
-                        (target * feature) + (-2 * self.lambda_regularization * self.weights[i]))
+                    (target * feature)
+                    + (-2 * self.lambda_regularization * self.weights[i])
+                )
 
         else:
             for i in range(len(features)):
-                self.weights[i] = self.weights[i] + alpha * (-2 * self.lambda_regularization * self.weights[i])
+                self.weights[i] = self.weights[i] + alpha * (
+                    -2 * self.lambda_regularization * self.weights[i]
+                )
 
     def infer(self, features: np.array) -> np.array:
         """
@@ -75,6 +86,7 @@ class SVM(BaseModel, Classifier):
         :return: predicted label of inputs
         """
         return np.array([self.infer(features) for features in inputs_features])
+
 
 # class SVR(BaseModel, Regression):
 #     def __init__(self, epsilon=0.5):

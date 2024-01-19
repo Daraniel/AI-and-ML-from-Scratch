@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 
 from common.exceptions import ModelNotTrainedException
-from models.linear_regression import LinearRegressionAnalytic, LinearRegressionGradiantDecent
+from models.linear_regression import (LinearRegressionAnalytic,
+                                      LinearRegressionGradiantDecent)
 
 
 class TestLinearRegressionAnalytic:

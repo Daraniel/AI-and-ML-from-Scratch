@@ -7,8 +7,9 @@ import numpy as np
 from tqdm import tqdm
 
 from common.base_model import BaseModel
-from common.exceptions import InvalidArgumentException, ModelNotTrainedException
-from common.utils import EvaluationMetrics, ActivationFunctionsForNN
+from common.exceptions import (InvalidArgumentException,
+                               ModelNotTrainedException)
+from common.utils import ActivationFunctionsForNN, EvaluationMetrics
 
 
 class NeuralNetworkModel(BaseModel):
@@ -18,7 +19,9 @@ class NeuralNetworkModel(BaseModel):
         :param cost_function: cos function used to evaluate the performance of the model
         """
         if not callable(cost_function):
-            raise InvalidArgumentException(f'cost_function must be a callable not a {type(cost_function)}')
+            raise InvalidArgumentException(
+                f"cost_function must be a callable not a {type(cost_function)}"
+            )
 
         self.cost_function = cost_function
         self.layers: List[BaseLayer]
@@ -43,8 +46,10 @@ class NeuralNetworkModel(BaseModel):
         if not isinstance(layer, BaseLayer):
             raise InvalidArgumentException("Layer must inherit from BaseLayer")
         if len(self.layers) == 0 and isinstance(layer, LinearLayer):
-            print("When using LinearLayer as the first layer,"
-                  " a flattening operation must be applied to the data due to internal implementation details")
+            print(
+                "When using LinearLayer as the first layer,"
+                " a flattening operation must be applied to the data due to internal implementation details"
+            )
             self.layers.append(FlattenLayer())
         self.layers.append(layer)
 
@@ -101,13 +106,15 @@ class NeuralNetworkModel(BaseModel):
             for epoch in range(epochs):
                 for i in tqdm(np.random.permutation(m), disable=not verbose):
                     weight_sums, activations = self._forward(np.atleast_3d(x[i]))
-                    gradients, gradients_bias = self._back_propagate(weight_sums, activations, y[i])
+                    gradients, gradients_bias = self._back_propagate(
+                        weight_sums, activations, y[i]
+                    )
                     self._gradient_decent(gradients, gradients_bias, 1)
 
                 self.is_trained = True
                 cost = self.calculate_cost(x, y)
                 if verbose:
-                    print(f'Cost at epoch {epoch} is {cost}')
+                    print(f"Cost at epoch {epoch} is {cost}")
                 costs.append(cost)
 
         else:  # use normal gradient descent
@@ -115,27 +122,43 @@ class NeuralNetworkModel(BaseModel):
             m = len(x)
             for epoch in range(epochs):
                 batches = self._get_batch(m, batch_size)
-                for batch in tqdm(batches, total=m // batch_size + 1, disable=not verbose):
+                for batch in tqdm(
+                    batches, total=m // batch_size + 1, disable=not verbose
+                ):
                     first_gradient, first_gradient_bias = 0, 0
                     for element in batch:
-                        weight_sums, activations = self._forward(np.atleast_3d(x[element]))
-                        gradients, gradients_bias = self._back_propagate(weight_sums, activations, y[element])
+                        weight_sums, activations = self._forward(
+                            np.atleast_3d(x[element])
+                        )
+                        gradients, gradients_bias = self._back_propagate(
+                            weight_sums, activations, y[element]
+                        )
 
                         if element == batch[0]:
                             first_gradient = gradients
                             first_gradient_bias = gradients_bias
                         else:
                             first_gradient = dict(
-                                [(k, first_gradient[k] + gradients[k]) for k in first_gradient.keys()])
+                                [
+                                    (k, first_gradient[k] + gradients[k])
+                                    for k in first_gradient.keys()
+                                ]
+                            )
                             first_gradient_bias = dict(
-                                [(k, first_gradient_bias[k] + gradients_bias[k]) for k in first_gradient_bias.keys()])
+                                [
+                                    (k, first_gradient_bias[k] + gradients_bias[k])
+                                    for k in first_gradient_bias.keys()
+                                ]
+                            )
 
-                    self._gradient_decent(first_gradient, first_gradient_bias, batch_size)
+                    self._gradient_decent(
+                        first_gradient, first_gradient_bias, batch_size
+                    )
 
                 self.is_trained = True
                 cost = self.calculate_cost(x, y)
                 if verbose:
-                    print(f'Cost at epoch {epoch} is {cost}')
+                    print(f"Cost at epoch {epoch} is {cost}")
                 costs.append(cost)
 
         return np.array(costs)
@@ -165,10 +188,10 @@ class NeuralNetworkModel(BaseModel):
             cost += self.cost_function(yhat, y[i])
 
         for layer in self.layers:
-            if hasattr(layer, 'filters'):
-                cost += np.sum([np.sum(ii ** 2) for ii in layer.filters])
-            elif hasattr(layer, 'weights'):
-                cost += np.sum(layer.weights ** 2)
+            if hasattr(layer, "filters"):
+                cost += np.sum([np.sum(ii**2) for ii in layer.filters])
+            elif hasattr(layer, "weights"):
+                cost += np.sum(layer.weights**2)
 
         return cost / len(x)
 
@@ -202,21 +225,25 @@ class NeuralNetworkModel(BaseModel):
         parameters_dictionary = {}
         for i, layer in enumerate(self.layers):
             if isinstance(layer, ConvolutionalLayer):
-                parameters = {'learning_rate': layer.learning_rate,
-                              'lambda_regularization': layer.lambda_regularization,
-                              'filters': layer.filters,
-                              'biases': layer.biases}
+                parameters = {
+                    "learning_rate": layer.learning_rate,
+                    "lambda_regularization": layer.lambda_regularization,
+                    "filters": layer.filters,
+                    "biases": layer.biases,
+                }
             elif isinstance(layer, LinearLayer):
-                parameters = {'learning_rate': layer.learning_rate,
-                              'lambda_regularization': layer.lambda_regularization,
-                              'weights': layer.weights,
-                              'biases': layer.biases}
+                parameters = {
+                    "learning_rate": layer.learning_rate,
+                    "lambda_regularization": layer.lambda_regularization,
+                    "weights": layer.weights,
+                    "biases": layer.biases,
+                }
             else:
                 continue
 
             parameters_dictionary[str(i)] = parameters
 
-        with open(file_name, 'wb') as file:
+        with open(file_name, "wb") as file:
             pickle.dump(parameters_dictionary, file)
 
     def load_weights(self, file_name):
@@ -225,24 +252,25 @@ class NeuralNetworkModel(BaseModel):
         before loading the weights
         :param file_name: name of the file to load the weights from
         """
-        with open(file_name, 'rb') as file:
+        with open(file_name, "rb") as file:
             parameters_dictionary = pickle.load(file)
             for i, layer in enumerate(self.layers):
                 if str(i) in parameters_dictionary:
                     parameters = parameters_dictionary[str(i)]
-                    layer.learning_rate = parameters['learning_rate']
-                    layer.lambda_regularization = parameters['lambda_regularization']
-                    layer.biases = parameters['biases']
+                    layer.learning_rate = parameters["learning_rate"]
+                    layer.lambda_regularization = parameters["lambda_regularization"]
+                    layer.biases = parameters["biases"]
                     if isinstance(layer, LinearLayer):
-                        layer.weights = parameters['weights']
+                        layer.weights = parameters["weights"]
                     elif isinstance(layer, ConvolutionalLayer):
-                        layer.filters = parameters['filters']
+                        layer.filters = parameters["filters"]
 
 
 class BaseLayer(abc.ABC):
     """
     base neural network layer, all layers must inherit from this layer
     """
+
     @abc.abstractmethod
     def forward(self, x):
         pass
@@ -260,17 +288,29 @@ class BaseLayer(abc.ABC):
         s0, s1 = x.strides[:2]
         m1, n1 = x.shape[:2]
         m2, n2 = kernel_shape[:2]
-        view_shape = (1 + (m1 - m2) // stride, 1 + (n1 - n2) // stride, m2, n2) + x.shape[2:]
+        view_shape = (
+            1 + (m1 - m2) // stride,
+            1 + (n1 - n2) // stride,
+            m2,
+            n2,
+        ) + x.shape[2:]
         strides = (stride * s0, stride * s1, s0, s1) + x.strides[2:]
         x_stride = np.lib.stride_tricks.as_strided(
-            x, view_shape, strides=strides, writeable=False)
+            x, view_shape, strides=strides, writeable=False
+        )
         return x_stride
 
 
 class LinearLayer(BaseLayer):
-    def __init__(self, input_shape, output_shape, activation_function=ActivationFunctionsForNN.Relu(),
-                 lambda_regularization=0.01,
-                 gradients_range=0.5, learning_rate=0.01):
+    def __init__(
+        self,
+        input_shape,
+        output_shape,
+        activation_function=ActivationFunctionsForNN.Relu(),
+        lambda_regularization=0.01,
+        gradients_range=0.5,
+        learning_rate=0.01,
+    ):
         """
         create a linear layer
         :param input_shape: input size
@@ -286,11 +326,17 @@ class LinearLayer(BaseLayer):
         if not isinstance(output_shape, int) or output_shape <= 0:
             raise InvalidArgumentException("output_shape must be a positive integer")
         if not isinstance(gradients_range, Number) or gradients_range < 0:
-            raise InvalidArgumentException("gradients_range must be a non negative integer")
+            raise InvalidArgumentException(
+                "gradients_range must be a non negative integer"
+            )
         if not isinstance(learning_rate, Number) or learning_rate <= 0:
             raise InvalidArgumentException("learning_rate must be a positive integer")
-        if not isinstance(activation_function, ActivationFunctionsForNN.BaseActivationFunctionForNN):
-            raise InvalidArgumentException("activation_function must inherit from BaseActivationFunctionForNN")
+        if not isinstance(
+            activation_function, ActivationFunctionsForNN.BaseActivationFunctionForNN
+        ):
+            raise InvalidArgumentException(
+                "activation_function must inherit from BaseActivationFunctionForNN"
+            )
 
         self.input_shape = input_shape
         self.output_shape = output_shape
@@ -299,8 +345,12 @@ class LinearLayer(BaseLayer):
         self.lambda_regularization = lambda_regularization
         self.gradients_range = gradients_range
 
-        self.weights = np.random.normal(0, np.sqrt(2 / self.input_shape), size=[self.output_shape, self.input_shape])
-        self.biases = np.random.normal(0, np.sqrt(2 / self.input_shape), size=self.output_shape)
+        self.weights = np.random.normal(
+            0, np.sqrt(2 / self.input_shape), size=[self.output_shape, self.input_shape]
+        )
+        self.biases = np.random.normal(
+            0, np.sqrt(2 / self.input_shape), size=self.output_shape
+        )
 
     def forward(self, x):
         results = np.dot(self.weights, x) + self.biases
@@ -308,7 +358,9 @@ class LinearLayer(BaseLayer):
         return results, activated_results
 
     def back_propagate(self, delta_in, weighted_sum):
-        return np.dot(self.weights.T, delta_in) * self.activation_function.backward(weighted_sum)
+        return np.dot(self.weights.T, delta_in) * self.activation_function.backward(
+            weighted_sum
+        )
 
     def compute_gradients(self, delta, activation):
         gradients = np.outer(delta, activation)
@@ -318,18 +370,32 @@ class LinearLayer(BaseLayer):
         return gradients, gradients_bias
 
     def gradient_decent(self, gradients, gradients_bias, number_of_records):
-        self.weights = (self.weights * (1 - self.learning_rate * self.lambda_regularization / number_of_records)
-                        - self.learning_rate * gradients / number_of_records)
-        self.biases = self.biases - self.learning_rate * gradients_bias / number_of_records
+        self.weights = (
+            self.weights
+            * (1 - self.learning_rate * self.lambda_regularization / number_of_records)
+            - self.learning_rate * gradients / number_of_records
+        )
+        self.biases = (
+            self.biases - self.learning_rate * gradients_bias / number_of_records
+        )
 
     def get_number_of_parameters(self):
         return self.input_shape * self.output_shape + self.output_shape
 
 
 class ConvolutionalLayer(BaseLayer):
-    def __init__(self, kernel_size, input_channels, output_channels,
-                 activation_function=ActivationFunctionsForNN.Relu(), lambda_regularization=0.01,
-                 gradients_range=0.5, padding=0, stride=1, learning_rate=0.01):
+    def __init__(
+        self,
+        kernel_size,
+        input_channels,
+        output_channels,
+        activation_function=ActivationFunctionsForNN.Relu(),
+        lambda_regularization=0.01,
+        gradients_range=0.5,
+        padding=0,
+        stride=1,
+        learning_rate=0.01,
+    ):
         """
         create a convolutional layer
         :param kernel_size: size of the kernel
@@ -351,15 +417,21 @@ class ConvolutionalLayer(BaseLayer):
         if not isinstance(output_channels, int) or output_channels <= 0:
             raise InvalidArgumentException("output_shape must be a positive integer")
         if not isinstance(gradients_range, Number) or gradients_range < 0:
-            raise InvalidArgumentException("gradients_range must be a non negative integer")
+            raise InvalidArgumentException(
+                "gradients_range must be a non negative integer"
+            )
         if not isinstance(padding, int) or padding < 0:
             raise InvalidArgumentException("padding must be a non negative integer")
         if not isinstance(stride, int) or stride < 0:
             raise InvalidArgumentException("stride must be a non negative integer")
         if not isinstance(learning_rate, Number) or learning_rate <= 0:
             raise InvalidArgumentException("learning_rate must be a positive integer")
-        if not isinstance(activation_function, ActivationFunctionsForNN.BaseActivationFunctionForNN):
-            raise InvalidArgumentException("activation_function must inherit from BaseActivationFunctionForNN")
+        if not isinstance(
+            activation_function, ActivationFunctionsForNN.BaseActivationFunctionForNN
+        ):
+            raise InvalidArgumentException(
+                "activation_function must inherit from BaseActivationFunctionForNN"
+            )
 
         self.kernel_size = kernel_size
         self.padding = padding
@@ -371,20 +443,34 @@ class ConvolutionalLayer(BaseLayer):
         self.lambda_regularization = lambda_regularization
         self.gradients_range = gradients_range
 
-        self.filters = np.array([np.random.normal(0, np.sqrt(2 / self.kernel_size ** 2 / self.input_channels),
-                                                  [self.kernel_size, self.kernel_size, self.input_channels]) for _
-                                 in range(self.output_channels)])
+        self.filters = np.array(
+            [
+                np.random.normal(
+                    0,
+                    np.sqrt(2 / self.kernel_size**2 / self.input_channels),
+                    [self.kernel_size, self.kernel_size, self.input_channels],
+                )
+                for _ in range(self.output_channels)
+            ]
+        )
 
-        self.biases = np.random.normal(0, np.sqrt(2 / self.kernel_size ** 2 / self.input_channels),
-                                       self.output_channels)
+        self.biases = np.random.normal(
+            0,
+            np.sqrt(2 / self.kernel_size**2 / self.input_channels),
+            self.output_channels,
+        )
 
     def forward(self, x):
         x = np.atleast_3d(x)
         x = self._add_padding(x, self.padding)
 
-        weigh_sums = np.zeros([(x.shape[0] + 2 * self.padding - self.kernel_size) // self.stride + 1,
-                               (x.shape[1] + 2 * self.padding - self.kernel_size) // self.stride + 1,
-                               self.output_channels])
+        weigh_sums = np.zeros(
+            [
+                (x.shape[0] + 2 * self.padding - self.kernel_size) // self.stride + 1,
+                (x.shape[1] + 2 * self.padding - self.kernel_size) // self.stride + 1,
+                self.output_channels,
+            ]
+        )
 
         for channel in range(self.output_channels):
             weigh_sums[:, :, channel] = self._conv3d(x, self.filters[channel])[:, :]
@@ -398,7 +484,9 @@ class ConvolutionalLayer(BaseLayer):
         for output_channel in range(delta_in.shape[-1]):
             flipped_kernel = self.filters[output_channel, ::-1, ::-1, ...]
             for jj in range(weighted_sum.shape[-1]):
-                result[:, :, jj] += self._full_conv3d(delta_in[:, :, output_channel], flipped_kernel[:, :, jj])
+                result[:, :, jj] += self._full_conv3d(
+                    delta_in[:, :, output_channel], flipped_kernel[:, :, jj]
+                )
         result = result * self.activation_function.backward(weighted_sum)
         return result
 
@@ -408,16 +496,24 @@ class ConvolutionalLayer(BaseLayer):
             delta_output_channel = np.take(delta, output_channel, axis=-1)
             gradiant_output_channel = gradients[output_channel]
             for activation_channel in range(activation.shape[-1]):
-                gradiant_output_channel[:, :, activation_channel] += self._conv3d(activation[:, :, activation_channel],
-                                                                                  delta_output_channel)
-            gradients[output_channel] = np.clip(gradiant_output_channel, -self.gradients_range, self.gradients_range)
+                gradiant_output_channel[:, :, activation_channel] += self._conv3d(
+                    activation[:, :, activation_channel], delta_output_channel
+                )
+            gradients[output_channel] = np.clip(
+                gradiant_output_channel, -self.gradients_range, self.gradients_range
+            )
         gradients_bias = np.sum(delta, axis=(0, 1))
         return gradients, gradients_bias
 
     def gradient_decent(self, gradients, gradients_bias, number_of_records):
-        self.filters = (self.filters * (1 - self.learning_rate * self.lambda_regularization / number_of_records)
-                        - self.learning_rate * gradients / number_of_records)
-        self.biases = self.biases - self.learning_rate * gradients_bias / number_of_records
+        self.filters = (
+            self.filters
+            * (1 - self.learning_rate * self.lambda_regularization / number_of_records)
+            - self.learning_rate * gradients / number_of_records
+        )
+        self.biases = (
+            self.biases - self.learning_rate * gradients_bias / number_of_records
+        )
 
     def get_number_of_parameters(self):
         return self.filters.size + self.output_channels
@@ -428,7 +524,9 @@ class ConvolutionalLayer(BaseLayer):
             padding_right = padding_left
         if padding_left + padding_right == 0:
             return x
-        x_padded = np.zeros(tuple(padding_left + padding_right + np.array(x.shape[:2])) + x.shape[2:])
+        x_padded = np.zeros(
+            tuple(padding_left + padding_right + np.array(x.shape[:2])) + x.shape[2:]
+        )
         x_padded[padding_left:-padding_right, padding_left:-padding_right] = x
         return x_padded
 
@@ -439,18 +537,27 @@ class ConvolutionalLayer(BaseLayer):
             raise InvalidArgumentException("kernel must be 2 or 3 dimensional")
         if np.ndim(x) < np.ndim(kernel):
             raise InvalidArgumentException(
-                "dimensions of the input must be more or equal than dimensions of the kernel")
+                "dimensions of the input must be more or equal than dimensions of the kernel"
+            )
         if np.ndim(x) == 3 and np.ndim(kernel) == 2:
             kernel = np.repeat(kernel[:, :, None], x.shape[2], axis=2)
 
-        view = self._get_stride(self._add_padding(x, self.padding), kernel.shape, self.stride)
-        return np.sum(view * kernel, axis=(2, 3)) if np.ndim(kernel) == 2 else np.sum(view * kernel, axis=(2, 3, 4))
+        view = self._get_stride(
+            self._add_padding(x, self.padding), kernel.shape, self.stride
+        )
+        return (
+            np.sum(view * kernel, axis=(2, 3))
+            if np.ndim(kernel) == 2
+            else np.sum(view * kernel, axis=(2, 3, 4))
+        )
 
     def _full_conv3d(self, x, kernel):
-        shape = (x.shape[:2][0] + (self.stride - 1) * (x.shape[:2][0] - 1),
-                 x.shape[:2][1] + (self.stride - 1) * (x.shape[:2][1] - 1)) + x.shape[2:]
+        shape = (
+            x.shape[:2][0] + (self.stride - 1) * (x.shape[:2][0] - 1),
+            x.shape[:2][1] + (self.stride - 1) * (x.shape[:2][1] - 1),
+        ) + x.shape[2:]
         x_interlaced = np.zeros(shape)
-        x_interlaced[0::self.stride, 0::self.stride, ...] = x
+        x_interlaced[0 :: self.stride, 0 :: self.stride, ...] = x
         pad_left = kernel.shape[:2][0] - 1
         idx = 0
         while True:
@@ -490,13 +597,18 @@ class PoolingLayer(BaseLayer):
         if self.add_padding:
             ny = m // self.stride + 1
             nx = n // self.stride + 1
-            size = ((ny - 1) * self.stride + self.stride, (nx - 1) * self.stride + self.stride) + x.shape[2:]
+            size = (
+                (ny - 1) * self.stride + self.stride,
+                (nx - 1) * self.stride + self.stride,
+            ) + x.shape[2:]
             mat_pad = np.full(size, 0)
             mat_pad[:m, :n, ...] = x
         else:
             mat_pad = x[
-                      :(m - self.stride) // self.stride * self.stride + self.stride,
-                      :(n - self.stride) // self.stride * self.stride + self.stride, ...]
+                : (m - self.stride) // self.stride * self.stride + self.stride,
+                : (n - self.stride) // self.stride * self.stride + self.stride,
+                ...,
+            ]
 
         view = self._get_stride(mat_pad, (self.stride, self.stride), self.stride)
 
@@ -511,20 +623,33 @@ class PoolingLayer(BaseLayer):
     def back_propagate(self, delta_in, weighted_sum):
         result = np.zeros(weighted_sum.shape)
         if self.use_mean_pooling:
-            sub_result = np.reshape(delta_in, (weighted_sum.shape[:2][0] // self.stride, 1,
-                                               weighted_sum.shape[:2][1] // self.stride, 1)
-                                    + delta_in.shape[2:])
+            sub_result = np.reshape(
+                delta_in,
+                (
+                    weighted_sum.shape[:2][0] // self.stride,
+                    1,
+                    weighted_sum.shape[:2][1] // self.stride,
+                    1,
+                )
+                + delta_in.shape[2:],
+            )
             sub_result = np.repeat(sub_result, self.stride, axis=1)
             sub_result = np.repeat(sub_result, self.stride, axis=3)
-            sub_result = np.reshape(sub_result, (weighted_sum.shape[:2][0] // self.stride * self.stride,
-                                                 weighted_sum.shape[:2][1] // self.stride * self.stride)
-                                    + delta_in.shape[2:])
+            sub_result = np.reshape(
+                sub_result,
+                (
+                    weighted_sum.shape[:2][0] // self.stride * self.stride,
+                    weighted_sum.shape[:2][1] // self.stride * self.stride,
+                )
+                + delta_in.shape[2:],
+            )
 
-            result[:sub_result.shape[0], :sub_result.shape[1], ...] = sub_result
+            result[: sub_result.shape[0], : sub_result.shape[1], ...] = sub_result
         else:
             if not np.ndim(self.max_position) in [4, 5]:
                 raise InvalidArgumentException(
-                    f"Max position of a pooling layer must have 4 or 5 dimensions, not {np.ndim(self.max_position)}")
+                    f"Max position of a pooling layer must have 4 or 5 dimensions, not {np.ndim(self.max_position)}"
+                )
 
             if np.ndim(self.max_position) == 5:
                 iy, ix, cy, cx, cc = np.where(self.max_position == 1)

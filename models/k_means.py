@@ -23,14 +23,21 @@ class KMeansClassifier(BaseModel, Classifier):
         """
         self.central_points = []
         while len(self.central_points) < k:
-            self.central_points = points[random.sample(range(0, len(points)), k - len(self.central_points))]
-            self. central_points = np.unique(self.central_points, axis=0)
+            self.central_points = points[
+                random.sample(range(0, len(points)), k - len(self.central_points))
+            ]
+            self.central_points = np.unique(self.central_points, axis=0)
 
     def _get_new_central_points(self):
         """
         calculates the new central points by calculating mean of the points in each cluster
         """
-        self.central_points = np.array([np.mean(self.clusters[key], axis=0) for key in sorted(self.clusters.keys())])
+        self.central_points = np.array(
+            [
+                np.mean(self.clusters[key], axis=0)
+                for key in sorted(self.clusters.keys())
+            ]
+        )
 
     def _get_clusters(self, points: np.ndarray):
         """
@@ -39,7 +46,9 @@ class KMeansClassifier(BaseModel, Classifier):
         :param points: points to find their cluster
         """
         self.clusters = {}
-        closest_points = np.argmin(self.distance_metric(points, self.central_points), axis=1)
+        closest_points = np.argmin(
+            self.distance_metric(points, self.central_points), axis=1
+        )
 
         for i, closest_point in enumerate(closest_points):
             if closest_point not in self.clusters:
@@ -47,8 +56,13 @@ class KMeansClassifier(BaseModel, Classifier):
             else:
                 self.clusters[closest_point].append(points[i])
 
-    def _search_can_continue(self, previous: np.ndarray, current: np.ndarray,
-                             max_single_element_change_threshold: float = 0, max_average_change_threshold: float = 0):
+    def _search_can_continue(
+        self,
+        previous: np.ndarray,
+        current: np.ndarray,
+        max_single_element_change_threshold: float = 0,
+        max_average_change_threshold: float = 0,
+    ):
         """
         determined whether search should continue or not. it can continue when the average of central points has moved
         more than max_average_change_threshold or a single point has moved more than max_single_element_change_threshold
@@ -59,11 +73,19 @@ class KMeansClassifier(BaseModel, Classifier):
         :return: whether the search can continue or not
         """
         change = self.distance_metric(previous, current).diagonal()
-        return (np.max(change) > max_single_element_change_threshold
-                and np.average(np.abs(change)) > max_average_change_threshold)
+        return (
+            np.max(change) > max_single_element_change_threshold
+            and np.average(np.abs(change)) > max_average_change_threshold
+        )
 
-    def learn(self, points: np.ndarray, k: int, max_iterations: int = 10,
-              max_single_element_change_threshold: float = 0, max_average_change_threshold: float = 0):
+    def learn(
+        self,
+        points: np.ndarray,
+        k: int,
+        max_iterations: int = 10,
+        max_single_element_change_threshold: float = 0,
+        max_average_change_threshold: float = 0,
+    ):
         """
         trains the k-means clustering algorithm and finds the central points of each cluster
         :param points: points to classify

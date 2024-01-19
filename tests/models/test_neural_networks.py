@@ -3,9 +3,12 @@ import tempfile
 import numpy as np
 import pytest
 
-from common.exceptions import InvalidArgumentException, ModelNotTrainedException
+from common.exceptions import (InvalidArgumentException,
+                               ModelNotTrainedException)
 from common.utils import ActivationFunctionsForNN
-from models.neural_networks import NeuralNetworkModel, LinearLayer, ConvolutionalLayer, FlattenLayer, PoolingLayer
+from models.neural_networks import (ConvolutionalLayer, FlattenLayer,
+                                    LinearLayer, NeuralNetworkModel,
+                                    PoolingLayer)
 
 
 class TestNeuralNetworkModel:
@@ -26,7 +29,11 @@ class TestNeuralNetworkModel:
 
     def test_add_layer_valid_type(self, simple_neural_network):
         model = NeuralNetworkModel()
-        model.add_layer(ConvolutionalLayer(kernel_size=3, padding=0, stride=1, input_channels=1, output_channels=10))
+        model.add_layer(
+            ConvolutionalLayer(
+                kernel_size=3, padding=0, stride=1, input_channels=1, output_channels=10
+            )
+        )
         assert isinstance(model.layers[0], ConvolutionalLayer)
 
     def test_add_linear_layer_as_first_layer(self, simple_neural_network):
@@ -64,17 +71,39 @@ class TestNeuralNetworkModel:
 
         cnn = NeuralNetworkModel()
 
-        layer1 = ConvolutionalLayer(kernel_size=3, padding=0, stride=1, input_channels=1, output_channels=10,
-                                    learning_rate=LEARNING_RATE, lambda_regularization=LAMBDA)  # -> 26x26x10
+        layer1 = ConvolutionalLayer(
+            kernel_size=3,
+            padding=0,
+            stride=1,
+            input_channels=1,
+            output_channels=10,
+            learning_rate=LEARNING_RATE,
+            lambda_regularization=LAMBDA,
+        )  # -> 26x26x10
         layer2 = PoolingLayer(stride=2, use_mean_pooling=True)  # -> 13x13x10
-        layer3 = ConvolutionalLayer(kernel_size=5, padding=0, stride=1, input_channels=10, output_channels=16,
-                                    learning_rate=LEARNING_RATE, lambda_regularization=LAMBDA)  # -> 9x9x16
+        layer3 = ConvolutionalLayer(
+            kernel_size=5,
+            padding=0,
+            stride=1,
+            input_channels=10,
+            output_channels=16,
+            learning_rate=LEARNING_RATE,
+            lambda_regularization=LAMBDA,
+        )  # -> 9x9x16
         layer4 = FlattenLayer()  # size is automatically calculated -> mx1296
-        layer5 = LinearLayer(input_shape=1296, output_shape=100,
-                             learning_rate=LEARNING_RATE, lambda_regularization=LAMBDA)  # -> mx100
-        layer6 = LinearLayer(input_shape=100, output_shape=10,
-                             learning_rate=LEARNING_RATE / 10, activation_function=ActivationFunctionsForNN.Softmax(),
-                             lambda_regularization=LAMBDA)  # -> mx10
+        layer5 = LinearLayer(
+            input_shape=1296,
+            output_shape=100,
+            learning_rate=LEARNING_RATE,
+            lambda_regularization=LAMBDA,
+        )  # -> mx100
+        layer6 = LinearLayer(
+            input_shape=100,
+            output_shape=10,
+            learning_rate=LEARNING_RATE / 10,
+            activation_function=ActivationFunctionsForNN.Softmax(),
+            lambda_regularization=LAMBDA,
+        )  # -> mx10
 
         cnn.add_layer(layer1)
         cnn.add_layer(layer2)
@@ -92,7 +121,11 @@ class TestNeuralNetworkModel:
         y = np.random.rand(10, 2)
 
         simple_neural_network.learn(x, y, epochs=1, batch_size=x.shape[0])
-        weights_before = [layer.weights.copy() for layer in simple_neural_network.layers if hasattr(layer, 'weights')]
+        weights_before = [
+            layer.weights.copy()
+            for layer in simple_neural_network.layers
+            if hasattr(layer, "weights")
+        ]
 
         with tempfile.TemporaryDirectory() as temp_dir:
             file_path = temp_dir + "/test_weights.pkl"
@@ -103,6 +136,13 @@ class TestNeuralNetworkModel:
             loaded_model.add_layer(LinearLayer(input_shape=5, output_shape=2))
             loaded_model.load_weights(file_path)
 
-            weights_after = [layer.weights.copy() for layer in loaded_model.layers if hasattr(layer, 'weights')]
+            weights_after = [
+                layer.weights.copy()
+                for layer in loaded_model.layers
+                if hasattr(layer, "weights")
+            ]
             assert len(weights_before) == len(weights_after)
-            assert all(np.allclose(weights_before[i], weights_after[i]) for i in range(len(weights_before)))
+            assert all(
+                np.allclose(weights_before[i], weights_after[i])
+                for i in range(len(weights_before))
+            )

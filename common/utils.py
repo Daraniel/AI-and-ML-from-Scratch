@@ -60,7 +60,7 @@ class ActivationFunctionsForNN:
             return ActivationFunctions.relu(x)
 
         def backward(self, x):
-            return 1. * (x > 0)
+            return 1.0 * (x > 0)
 
     class Sigmoid(BaseActivationFunctionForNN):
         def __init__(self, shape):
@@ -101,8 +101,12 @@ class EvaluationMetrics:
 
     @staticmethod
     def euclidean_distance(first: np.ndarray, second: np.ndarray) -> np.ndarray:
-        sum_squares_first = np.reshape(np.sum(first * first, axis=1), (first.shape[0], 1))
-        sum_squares_second = np.reshape(np.sum(second * second, axis=1), (1, second.shape[0]))
+        sum_squares_first = np.reshape(
+            np.sum(first * first, axis=1), (first.shape[0], 1)
+        )
+        sum_squares_second = np.reshape(
+            np.sum(second * second, axis=1), (1, second.shape[0])
+        )
         result = -2 * first @ second.T + sum_squares_second + sum_squares_first
         return np.sqrt(result)
 
@@ -110,12 +114,12 @@ class EvaluationMetrics:
 class ImpurityFunctions:
     @staticmethod
     def gini(x):
-        return 1 - np.sum(x ** 2)
+        return 1 - np.sum(x**2)
 
     @staticmethod
     def entropy(x):
         x[np.where(x == 0)] = 1
-        return - np.sum(x * np.log2(x))
+        return -np.sum(x * np.log2(x))
 
     @staticmethod
     def mis_classification(x):

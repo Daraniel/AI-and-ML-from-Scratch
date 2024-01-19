@@ -1,7 +1,8 @@
 import numpy as np
 
-from common.utils import AverageNormalizer2D, ActivationFunctions, ActivationFunctionsForNN, EvaluationMetrics, \
-    ImpurityFunctions
+from common.utils import (ActivationFunctions, ActivationFunctionsForNN,
+                          AverageNormalizer2D, EvaluationMetrics,
+                          ImpurityFunctions)
 
 
 class TestAverageNormalizer2D:
@@ -52,7 +53,7 @@ class TestActivationFunctionsForNN:
 
         backward = relu.backward(x)
         assert backward.shape == x.shape
-        np.testing.assert_allclose(backward, np.array([0., 0., 1.]))
+        np.testing.assert_allclose(backward, np.array([0.0, 0.0, 1.0]))
 
     def test_sigmoid(self):
         sigmoid = ActivationFunctionsForNN.Sigmoid((3,))
@@ -63,25 +64,39 @@ class TestActivationFunctionsForNN:
 
         backward = sigmoid.backward(x)
         assert backward.shape == x.shape
-        np.testing.assert_allclose(backward, np.array([0.19661193, 0.20998717, 0.13552998]))
+        np.testing.assert_allclose(
+            backward, np.array([0.19661193, 0.20998717, 0.13552998])
+        )
 
     def test_softmax(self):
         expected_results = [
-            np.array([[4.48309e-06, 2.71913e-06, 2.01438e-06, 3.31258e-05],
-                      [4.48309e-06, 6.06720e-07, 1.80861e-03, 3.31258e-05],
-                      [1.21863e-05, 2.68421e-01, 7.29644e-01, 3.31258e-05]]),
-            np.array([[2.11942e-01, 1.01300e-05, 2.75394e-06, 3.33333e-01],
-                      [2.11942e-01, 2.26030e-06, 2.47262e-03, 3.33333e-01],
-                      [5.76117e-01, 9.99988e-01, 9.97525e-01, 3.33333e-01]]),
-            np.array([[1.05877e-01, 6.42177e-02, 4.75736e-02, 7.82332e-01],
-                      [2.42746e-03, 3.28521e-04, 9.79307e-01, 1.79366e-02],
-                      [1.22094e-05, 2.68929e-01, 7.31025e-01, 3.31885e-05]])
+            np.array(
+                [
+                    [4.48309e-06, 2.71913e-06, 2.01438e-06, 3.31258e-05],
+                    [4.48309e-06, 6.06720e-07, 1.80861e-03, 3.31258e-05],
+                    [1.21863e-05, 2.68421e-01, 7.29644e-01, 3.31258e-05],
+                ]
+            ),
+            np.array(
+                [
+                    [2.11942e-01, 1.01300e-05, 2.75394e-06, 3.33333e-01],
+                    [2.11942e-01, 2.26030e-06, 2.47262e-03, 3.33333e-01],
+                    [5.76117e-01, 9.99988e-01, 9.97525e-01, 3.33333e-01],
+                ]
+            ),
+            np.array(
+                [
+                    [1.05877e-01, 6.42177e-02, 4.75736e-02, 7.82332e-01],
+                    [2.42746e-03, 3.28521e-04, 9.79307e-01, 1.79366e-02],
+                    [1.22094e-05, 2.68929e-01, 7.31025e-01, 3.31885e-05],
+                ]
+            ),
         ]
-        for axis, expected_result, sum_result in zip([None, 0, 1], expected_results, [1, 4, 3]):
+        for axis, expected_result, sum_result in zip(
+            [None, 0, 1], expected_results, [1, 4, 3]
+        ):
             relu = ActivationFunctionsForNN.Softmax(axis=axis)
-            x = np.array([[1, 0.5, 0.2, 3],
-                          [1, -1, 7, 3],
-                          [2, 12, 13, 3]])
+            x = np.array([[1, 0.5, 0.2, 3], [1, -1, 7, 3], [2, 12, 13, 3]])
 
             forward = relu.forward(x)
             assert forward.shape == x.shape
@@ -117,7 +132,9 @@ class TestEvaluationMetrics:
         second = np.array([[5, 6], [7, 8]])
         distance = EvaluationMetrics.euclidean_distance(first, second)
         assert distance.shape == (2, 2)
-        np.testing.assert_allclose(distance, np.array([[5.65685425, 8.48528137], [2.82842712, 5.65685425]]))
+        np.testing.assert_allclose(
+            distance, np.array([[5.65685425, 8.48528137], [2.82842712, 5.65685425]])
+        )
 
 
 class TestImpurityFunctions:

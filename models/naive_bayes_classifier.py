@@ -2,7 +2,7 @@ import codecs
 import math
 import os
 import re
-from typing import Dict, Union, Tuple, List
+from typing import Dict, List, Tuple, Union
 
 from common.base_model import Classifier
 
@@ -26,10 +26,14 @@ class NaiveBayesClassifier(Classifier):
         :param string: string to tokenize
         :return: tokens of the string
         """
-        return re.findall(r'\b\w\w+\b', string)
+        return re.findall(r"\b\w\w+\b", string)
 
     @staticmethod
-    def _tokenize_and_parse_doc(doc: str, content: Dict[str, Union[int, Dict[str, int]]], vocabulary: Dict[str, int]):
+    def _tokenize_and_parse_doc(
+        doc: str,
+        content: Dict[str, Union[int, Dict[str, int]]],
+        vocabulary: Dict[str, int],
+    ):
         """
         tokenizes and parses a document string and updates the content and the vocabulary with it
         :param doc: document to check
@@ -37,13 +41,13 @@ class NaiveBayesClassifier(Classifier):
         :param vocabulary: dictionary of vocabulary
         """
         terms = NaiveBayesClassifier._tokenize(doc)
-        content['term_count'] += len(terms)
+        content["term_count"] += len(terms)
         for term in terms:
-            if term in content['terms']:
+            if term in content["terms"]:
                 vocabulary[term] += 1
-                content['terms'][term] += 1
+                content["terms"][term] += 1
             else:
-                content['terms'][term] = 1
+                content["terms"][term] = 1
                 if term in vocabulary:
                     vocabulary[term] += 1
                 else:
@@ -59,33 +63,50 @@ class NaiveBayesClassifier(Classifier):
         vocabulary = {}
 
         for doc_group, docs in doc_groups.items():
-            parsed_doc_groups[doc_group] = {'document_count': len(docs), 'term_count': 0, 'terms': dict()}
+            parsed_doc_groups[doc_group] = {
+                "document_count": len(docs),
+                "term_count": 0,
+                "terms": dict(),
+            }
             for doc in docs:
-                self._tokenize_and_parse_doc(doc, parsed_doc_groups[doc_group], vocabulary)
+                self._tokenize_and_parse_doc(
+                    doc, parsed_doc_groups[doc_group], vocabulary
+                )
 
         return self._learn(parsed_doc_groups, vocabulary)
 
-    def _learn(self, doc_groups: Dict[str, Dict[str, Union[int, Dict[str, int]]]], vocabulary: Dict[str, int]):
+    def _learn(
+        self,
+        doc_groups: Dict[str, Dict[str, Union[int, Dict[str, int]]]],
+        vocabulary: Dict[str, int],
+    ):
         """
         trains the Naive Bayes model on the input doc_groups and with given vocabulary
         :param doc_groups: doc_groups to train the model on
         :param vocabulary: words that happened in the vocabulary
         """
         self.doc_groups = doc_groups
-        self.vocabulary = {term: term_count for term, term_count in vocabulary.items() if term_count > self.min_count}
+        self.vocabulary = {
+            term: term_count
+            for term, term_count in vocabulary.items()
+            if term_count > self.min_count
+        }
 
         num_docs = sum([doc["document_count"] for doc in self.doc_groups.values()])
 
         for doc_group in self.doc_groups:
-            self.priors[doc_group] = math.log(self.doc_groups[doc_group]['document_count'] / num_docs)
+            self.priors[doc_group] = math.log(
+                self.doc_groups[doc_group]["document_count"] / num_docs
+            )
 
             self.conditionals[doc_group] = {}
-            terms_in_class = sum(self.doc_groups[doc_group]['terms'].values())
+            terms_in_class = sum(self.doc_groups[doc_group]["terms"].values())
 
             for term in self.vocabulary:
                 self.conditionals[doc_group][term] = math.log(
-                    (self.doc_groups[doc_group]['terms'].get(term, 0) + 1)
-                    / (terms_in_class + len(self.vocabulary)))
+                    (self.doc_groups[doc_group]["terms"].get(term, 0) + 1)
+                    / (terms_in_class + len(self.vocabulary))
+                )
 
     def infer(self, document: str) -> Tuple[Dict[str, float], int]:
         """
@@ -117,12 +138,14 @@ class NaiveBayesClassifierExtended(NaiveBayesClassifier):
         :param doc_path: path of the document to read
         :return: body of the document
         """
-        with codecs.open(doc_path, encoding='latin1') as doc:
+        with codecs.open(doc_path, encoding="latin1") as doc:
             doc = doc.read().lower()
-            _, _, body = doc.partition('\n\n')
+            _, _, body = doc.partition("\n\n")
             return body
 
-    def _parse_path(self, path: str) -> Tuple[Dict[str, Dict[str, Union[int, Dict[str, int]]]], Dict[str, int]]:
+    def _parse_path(
+        self, path: str
+    ) -> Tuple[Dict[str, Dict[str, Union[int, Dict[str, int]]]], Dict[str, int]]:
         """
         extracts all documents in different classes in a given path and creates their respective document groups and
         extracts their vocabulary
@@ -135,7 +158,11 @@ class NaiveBayesClassifierExtended(NaiveBayesClassifier):
         for doc_group in os.listdir(path):
             docs_path = os.path.join(path, doc_group)
             docs = os.listdir(docs_path)
-            doc_groups[doc_group] = {'document_count': len(docs), 'term_count': 0, 'terms': dict()}
+            doc_groups[doc_group] = {
+                "document_count": len(docs),
+                "term_count": 0,
+                "terms": dict(),
+            }
 
             for doc_path in docs:
                 doc = self._read_file(os.path.join(docs_path, doc_path))
