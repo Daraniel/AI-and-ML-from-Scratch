@@ -1,7 +1,7 @@
 # AI and ML from Scratch
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![PyTest](https://github.com/Daraniel/AI-and-ML-from-Scratch/actions/workflows/unittest.yml/badge.svg)](https://github.com/Daraniel/AI-and-ML-from-Scratch/actions/workflows/pytest.yml)
+[![PyTest](https://github.com/Daraniel/AI-and-ML-from-Scratch/actions/workflows/pytest.yml/badge.svg)](https://github.com/Daraniel/AI-and-ML-from-Scratch/actions/workflows/pytest.yml)
 
 This repository implements several classic AI and Machine Learning models from the scratch using numpy.
 
