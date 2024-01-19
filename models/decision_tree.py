@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Union
+
 import numpy as np
 
 from common.base_model import BaseModel, Classifier
@@ -9,7 +11,7 @@ from common.utils import ImpurityFunctions
 
 
 class DecisionNode:
-    def __init__(self, label, attribute: np.ndarray[int] = -1, children=None):
+    def __init__(self, label, attribute: Union[np.ndarray[int], int] = -1, children=None):
         """
         Creates a decision tree node
         :param label: label of this node
@@ -23,7 +25,7 @@ class DecisionNode:
 
 class DecisionTree(Classifier, BaseModel):
     def __init__(
-        self, impurity_function=ImpurityFunctions.entropy, verbose: bool = False
+            self, impurity_function=ImpurityFunctions.entropy, verbose: bool = False
     ):
         if not callable(impurity_function):
             raise InvalidArgumentException(
@@ -50,11 +52,11 @@ class DecisionTree(Classifier, BaseModel):
         self.root = self._learn(features, targets, max_depth)
 
     def _learn(
-        self,
-        features: np.array,
-        targets: np.array,
-        max_depth: int = None,
-        attributes=None,
+            self,
+            features: np.array,
+            targets: np.array,
+            max_depth: int = None,
+            attributes=None,
     ) -> DecisionNode:
         """
         train the model using features to predict targets, creating the branches will continue until a pure branch has
@@ -209,7 +211,7 @@ class DecisionTree(Classifier, BaseModel):
         }
 
     def _get_impurity_reduction(
-        self, features: np.ndarray, attribute_to_reduce: np.ndarray, targets: np.ndarray
+            self, features: np.ndarray, attribute_to_reduce: np.ndarray, targets: np.ndarray
     ):
         """
         calculates the impurity reduction for the given input
@@ -254,8 +256,8 @@ class DecisionTree(Classifier, BaseModel):
                 mask=wanted_features_mask,
             )
             impurity = (
-                number_of_wanted_features / features.shape[0]
-            ) * self.impurity_function(relative_frequency)
+                               number_of_wanted_features / features.shape[0]
+                       ) * self.impurity_function(relative_frequency)
             splittings.append(impurity)
             if self.verbose:
                 print(
