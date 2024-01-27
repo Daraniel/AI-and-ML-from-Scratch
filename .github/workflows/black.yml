@@ -1,6 +1,8 @@
 name: Lint source code
 on: [ push, pull_request ]
-
+# formatting code on git is no exactly a good practice but this code shows how it can be done if needed,
+# a better practice is only lining on git and setting up commit hooks to do the formatting,
+# like what I've done in my kubernetes_test repo
 jobs:
   format:
     runs-on: ubuntu-latest
