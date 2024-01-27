@@ -54,9 +54,9 @@ class LogisticRegression(BaseModel, Classifier):
                 targets[ix].flatten()
                 - ActivationFunctions.sigmoid(features[ix].dot(weights))
             )
-            gradiant[
-                gradiant < 0.00000000001
-            ] = 0.00000000001  # prevent vanishing values
+            gradiant[gradiant < 0.00000000001] = (
+                0.00000000001  # prevent vanishing values
+            )
             gradiant[gradiant > 10000000000] = 10000000000  # prevent exploding values
             weights = weights - gradiant
         return weights
